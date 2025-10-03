@@ -1,25 +1,31 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import SubmitReview from "./SubmitReview";
+import ReviewsList from "./reviewsList";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const [page, setPage] = useState("submit"); // "submit" or "reviews"
+
+    return (
+        <div className="container mt-4">
+            <nav className="mb-4">
+                <button
+                    className="btn btn-primary me-2"
+                    onClick={() => setPage("submit")}
+                >
+                    Submit Review
+                </button>
+                <button
+                    className="btn btn-secondary"
+                    onClick={() => setPage("reviews")}
+                >
+                    All Reviews
+                </button>
+            </nav>
+
+            {page === "submit" && <SubmitReview />}
+            {page === "reviews" && <ReviewsList />}
+        </div>
+    );
 }
 
 export default App;

@@ -1,7 +1,14 @@
-version: "3.8"
+version: '3.9'
 
 services:
   react-app:
     build: .
+    container_name: react_app
+    command: npm start -- --host 0.0.0.0
+    volumes:
+      - .:/app
+      - /app/node_modules
     ports:
-      - "3000:80"
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
