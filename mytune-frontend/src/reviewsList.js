@@ -34,6 +34,7 @@ function ReviewsList() {
                 {reviews.map((review) => (
                     <div key={review.id} className="list-group-item mb-3">
                         <h5>{review.title}</h5>
+                        <h6>{review.artist}</h6>
                         <p>{review.content}</p>
                         <p>
                             <strong>By:</strong> {review.name} | <strong>Rating:</strong> {review.rating}

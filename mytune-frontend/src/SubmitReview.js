@@ -71,6 +71,8 @@ function SubmitReview() {
                     />
                 </div>
 
+
+
                 <div className="mb-3">
                     <label className="form-label">Title</label>
                     <input
@@ -78,6 +80,18 @@ function SubmitReview() {
                         name="title"
                         className="form-control"
                         value={formData.title}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                <div className="mb-3">
+                    <label className="form-label">Artist</label>
+                    <input
+                        type="text"
+                        name="artist"
+                        className="form-control"
+                        value={formData.artist}
                         onChange={handleChange}
                         required
                     />
