@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import SubmitReview from "./SubmitReview";
 import ReviewsList from "./reviewsList";
+import ArtistSearch from './Pages/ArtistSearch';
 
 function App() {
     const [page, setPage] = useState("submit"); // "submit" or "reviews"
@@ -20,10 +21,17 @@ function App() {
                 >
                     All Reviews
                 </button>
+                <button
+                    className="btn btn-secondary"
+                    onClick={() => setPage("search")}
+                >
+                    Search
+                </button>
             </nav>
 
             {page === "submit" && <SubmitReview />}
             {page === "reviews" && <ReviewsList />}
+            {page === "search" && <ArtistSearch />}
         </div>
     );
 }
