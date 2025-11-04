@@ -1,41 +1,33 @@
-name: React App CI
-
+name: React CI
 on:
   push:
-    branches: [ main, develop ]
+    branches:
+      - master
   pull_request:
-    branches: [ main, develop ]
-
+    branches:
+      - master
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 20
-
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
+          node-version: '18'
+          cache: 'npm'
+      
       - name: Install dependencies
         run: npm ci
-
-      - name: Run lint
+      
+      - name: Run linter
         run: npm run lint
         continue-on-error: true
-
+      
       - name: Run tests
-        run: npm test -- --watchAll=false
-
-      - name: Build app
+        run: npm test -- --coverage --watchAll=false
+      
+      - name: Build application
         run: npm run build
