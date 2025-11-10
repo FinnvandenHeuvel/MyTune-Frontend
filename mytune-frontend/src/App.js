@@ -4,7 +4,7 @@ import ReviewsList from "./reviewsList";
 import ArtistSearch from './Pages/ArtistSearch';
 
 function App() {
-    const [page, setPage] = useState("submit"); // "submit" or "reviews"ddd
+    const [page, setPage] = useState("submit"); // "submit" or "reviews"dd
 
     return (
         <div className="container mt-4">
