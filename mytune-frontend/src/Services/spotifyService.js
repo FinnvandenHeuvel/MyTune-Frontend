@@ -28,7 +28,7 @@ export const getAccessToken = async () => {
 
     const data = await response.json();
     accessToken = data.access_token;
-    tokenExpiry = Date.now() + (data.expires_in * 1000); // Convert to milliseconds
+    tokenExpiry = Date.now() + (data.expires_in * 1000);
 
     return accessToken;
 };
@@ -93,4 +93,25 @@ export const getArtistTopTracks = async (artistId, market = 'US') => {
 
     const data = await response.json();
     return data.tracks;
+};
+
+// Get artist's albums
+export const getArtistAlbums = async (artistId) => {
+    const token = await getAccessToken();
+
+    const response = await fetch(
+        `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&limit=20`,
+        {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch albums');
+    }
+
+    const data = await response.json();
+    return data.items;
 };
