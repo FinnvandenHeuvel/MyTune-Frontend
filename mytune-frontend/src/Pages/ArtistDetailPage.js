@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { getArtist, getArtistAlbums } from "../Services/spotifyService";
+import { AuthContext } from "../AuthContext";
 
 function ArtistDetailPage({ artistId, onBack }) {
+    const { isAuthenticated } = useContext(AuthContext);
     const [artist, setArtist] = useState(null);
     const [albums, setAlbums] = useState([]);
     const [reviews, setReviews] = useState([]);
@@ -11,7 +13,6 @@ function ArtistDetailPage({ artistId, onBack }) {
     const [selectedAlbum, setSelectedAlbum] = useState(null);
 
     const [formData, setFormData] = useState({
-        name: "",
         title: "",
         content: "",
         rating: 5,
@@ -30,10 +31,7 @@ function ArtistDetailPage({ artistId, onBack }) {
                 const albumsData = await getArtistAlbums(artistId);
                 setAlbums(albumsData);
 
-                // Fetch reviews only for this artist using artist_id
-                const reviewsResponse = await fetch(
-                    `${API_URL}/reviews/?artist_id=${artistId}`
-                );
+                const reviewsResponse = await fetch(`${API_URL}/reviews/?artist_id=${artistId}`);
                 if (reviewsResponse.ok) {
                     const reviewsData = await reviewsResponse.json();
                     setReviews(reviewsData);
@@ -59,52 +57,76 @@ function ArtistDetailPage({ artistId, onBack }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!artist) return;
+        setMessage("");
+
+        const token = localStorage.getItem("access");
+
+        if (!token) {
+            setMessage("You must be logged in to submit a review.");
+            return;
+        }
 
         const payload = {
-            ...formData,
+            title: formData.title,
+            content: formData.content,
+            rating: formData.rating,
             artist: artist.name,
-            artist_id: artistId,
-            album: selectedAlbum ? selectedAlbum.name : null,
-            album_id: selectedAlbum ? selectedAlbum.id : null,
+            artist_id: artist.id,
+            album: selectedAlbum?.name || null,
+            album_id: selectedAlbum?.id || null,
         };
+
+        console.log("Submitting payload:", payload);
 
         try {
             const response = await fetch(`${API_URL}/reviews/`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify(payload),
             });
 
-            if (!response.ok) throw new Error("Failed to submit review");
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Review submission error:", errorData);
+                setMessage("Error: " + JSON.stringify(errorData));
+                return;
+            }
 
-            const data = await response.json();
             setMessage("Review submitted successfully!");
-            setFormData({ name: "", title: "", content: "", rating: 5 });
-            setReviews([data, ...reviews]);
+            setFormData({ title: "", content: "", rating: 5 });
             setSelectedAlbum(null);
-            setTimeout(() => setMessage(""), 3000);
+
+            const refreshRes = await fetch(`${API_URL}/reviews/?artist_id=${artistId}`);
+            const updatedReviews = await refreshRes.json();
+            setReviews(updatedReviews);
+
+            setTimeout(() => setMessage(""), 2000);
+
         } catch (err) {
-            setMessage("Error: " + err.message);
+            console.error("Network/Server error:", err);
+            setMessage("Error submitting review");
         }
     };
 
-    if (loading) return <div className="container mt-5"><p>Loading...</p></div>;
-    if (error) return <div className="container mt-5"><p>Error: {error}</p></div>;
-    if (!artist) return <div className="container mt-5"><p>Artist not found</p></div>;
+
+
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>Error: {error}</p>;
+    if (!artist) return <p>Artist not found</p>;
 
     return (
         <div className="container mt-5">
-            {/* Back button */}
             <button className="btn btn-secondary mb-3" onClick={onBack}>
                 ← Back to Search
             </button>
 
-            {/* Artist Header */}
             <div className="row mb-4">
                 <div className="col-md-3">
-                    {artist.images && artist.images[0] && (
-                        <img src={artist.images[0].url} alt={artist.name} className="img-fluid rounded"/>
+                    {artist.images?.[0]?.url && (
+                        <img src={artist.images[0].url} alt={artist.name} className="img-fluid rounded" />
                     )}
                 </div>
                 <div className="col-md-9">
@@ -112,107 +134,125 @@ function ArtistDetailPage({ artistId, onBack }) {
                     <p className="text-muted">
                         <strong>Followers:</strong> {artist.followers?.total.toLocaleString()}
                     </p>
-                    <p>
-                        <strong>Genres:</strong> {artist.genres?.join(", ") || "N/A"}
-                    </p>
+                    <p><strong>Genres:</strong> {artist.genres?.join(", ") || "N/A"}</p>
                     <a href={artist.external_urls?.spotify} target="_blank" rel="noopener noreferrer" className="btn btn-success">
                         Open in Spotify
                     </a>
                 </div>
             </div>
 
-            {/* Albums Section */}
-            <div className="mb-5">
-                <h2>Albums & Singles</h2>
-                <div className="row">
-                    {albums.map((album) => (
-                        <div key={album.id} className="col-md-3 mb-3">
-                            <div className="card h-100 d-flex flex-column">
-                                {album.images && album.images[0] && (
-                                    <img src={album.images[0].url} className="card-img-top" alt={album.name}/>
-                                )}
-                                <div className="card-body d-flex flex-column">
-                                    <h6 className="card-title">{album.name}</h6>
-                                    <p className="card-text">
-                                        <small className="text-muted">{new Date(album.release_date).getFullYear()}</small>
-                                    </p>
-                                    <a href={album.external_urls?.spotify} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary mb-2">
-                                        Listen
-                                    </a>
-                                    <button type="button" className="btn btn-sm btn-primary mt-auto" onClick={() => setSelectedAlbum(album)}>
-                                        Write a Review
-                                    </button>
-                                </div>
+            <h2>Albums & Singles</h2>
+            <div className="row mb-5">
+                {albums.map((album) => (
+                    <div key={album.id} className="col-md-3 mb-3">
+                        <div className="card h-100 d-flex flex-column">
+                            {album.images?.[0]?.url && (
+                                <img src={album.images[0].url} className="card-img-top" alt={album.name} />
+                            )}
+                            <div className="card-body d-flex flex-column">
+                                <h6 className="card-title">{album.name}</h6>
+                                <small className="text-muted">{new Date(album.release_date).getFullYear()}</small>
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-primary mt-auto"
+                                    onClick={() => setSelectedAlbum(album)}
+                                >
+                                    Write Review
+                                </button>
                             </div>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
             </div>
 
-            {/* Submit Review Form */}
+            {/* 🔐 Submit Review Form */}
             <div className="mb-5">
-                <h2>{selectedAlbum ? `Submit Review for ${selectedAlbum.name}` : `Submit Review for ${artist.name}`}</h2>
+                <h2>{selectedAlbum ? `Review: ${selectedAlbum.name}` : `Review: ${artist.name}`}</h2>
                 {message && (
                     <div className={`alert ${message.includes("Error") ? "alert-danger" : "alert-success"}`}>
                         {message}
                     </div>
                 )}
-                <form onSubmit={handleSubmit} className="card p-4">
-                    {selectedAlbum && (
-                        <div className="mb-3">
-                            <label className="form-label fw-bold">Reviewing Album: {selectedAlbum.name}</label>
-                        </div>
-                    )}
-                    <div className="mb-3">
-                        <label className="form-label">Your Name</label>
-                        <input type="text" name="name" className="form-control" value={formData.name} onChange={handleChange} required/>
-                    </div>
-                    <div className="mb-3">
-                        <label className="form-label">Review Title</label>
-                        <input type="text" name="title" className="form-control" value={formData.title} onChange={handleChange} placeholder="e.g., Amazing album!" required/>
-                    </div>
-                    <div className="mb-3">
-                        <label className="form-label">Review</label>
-                        <textarea name="content" className="form-control" rows="4" value={formData.content} onChange={handleChange} placeholder="Share your thoughts..." required></textarea>
-                    </div>
-                    <div className="mb-3">
-                        <label className="form-label">Rating</label>
-                        <select name="rating" className="form-select" value={formData.rating} onChange={handleChange}>
-                            {[1,2,3,4,5].map(r => (
-                                <option key={r} value={r}>{r} {r === 1 ? "Star" : "Stars"}</option>
+
+                {!isAuthenticated ? (
+                    <div className="alert alert-warning">You must be logged in to submit a review.</div>
+                ) : (
+                    <form onSubmit={handleSubmit} className="card p-4">
+                        {selectedAlbum && (
+                            <div className="mb-3">
+                                <label className="fw-bold">Album: {selectedAlbum.name}</label>
+                            </div>
+                        )}
+
+                        <input
+                            type="text"
+                            name="title"
+                            className="form-control mb-3"
+                            placeholder="Review Title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            required
+                        />
+
+                        <textarea
+                            name="content"
+                            className="form-control mb-3"
+                            rows="4"
+                            placeholder="Share your thoughts..."
+                            value={formData.content}
+                            onChange={handleChange}
+                            required
+                        />
+
+                        <select
+                            name="rating"
+                            className="form-select mb-3"
+                            value={formData.rating}
+                            onChange={handleChange}
+                        >
+                            {[1, 2, 3, 4, 5].map(r => (
+                                <option key={r} value={r}>{r} ⭐</option>
                             ))}
                         </select>
-                    </div>
-                    <button type="submit" className="btn btn-primary">Submit Review</button>
-                </form>
-            </div>
 
-            {/* Reviews List */}
-            <div className="mb-5">
-                <h2>Reviews for {artist.name}</h2>
-                {reviews.length === 0 ? (
-                    <p className="text-muted">No reviews yet. Be the first to review!</p>
-                ) : (
-                    <div className="list-group">
-                        {reviews.map(review => (
-                            <div key={review.id} className="list-group-item mb-3">
-                                <div className="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h5>{review.title}</h5>
-                                        <p className="mb-1">{review.content}</p>
-                                        <small className="text-muted">
-                                            By {review.name} | Rating: {review.rating}/5
-                                            {review.album && <> | Album: {review.album}</>}
-                                            {review.created_at && <> | {new Date(review.created_at).toLocaleDateString()}</>}
-                                        </small>
-                                    </div>
-                                    <span className="badge bg-primary rounded-pill">{review.rating} ⭐</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                        <button type="submit" className="btn btn-primary">Submit Review</button>
+                    </form>
                 )}
             </div>
+
+            <h2>Reviews</h2>
+            {reviews.length === 0 ? (
+                <p>No reviews yet.</p>
+            ) : (
+                <div className="list-group mb-5">
+                    {reviews.map(review => (
+                        <div key={review.id} className="list-group-item mb-3">
+                            <div className="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5>{review.title}</h5>
+                                    <p className="mb-1">{review.content}</p>
+
+                                    <small className="text-muted">
+                                        ⭐ {review.rating}/5
+                                        {" — "}By <strong>{review.user}</strong>
+
+                                        {review.album && (
+                                            <> {" | Album: "}
+                                                <strong>{review.album}</strong>
+                                            </>
+                                        )}
+
+                                        {review.created_at && (
+                                            <> {" | "} {new Date(review.created_at).toLocaleDateString()}</>
+                                        )}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
         </div>
     );
 }
