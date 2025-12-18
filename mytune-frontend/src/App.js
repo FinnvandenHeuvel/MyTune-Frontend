@@ -1,14 +1,20 @@
-import React, { useState } from "react";
-import { AuthProvider } from "./AuthContext";
+import React, { useState, useContext } from "react";
+import { AuthProvider, AuthContext } from "./AuthContext";
+
 import Login from "./Pages/Login";
 import Register from "./Pages/Register";
+import Profile from "./Pages/Profile";
+
 import SubmitReview from "./SubmitReview";
 import ReviewsList from "./reviewsList";
-import ArtistSearch from './Pages/ArtistSearch';
-import ArtistDetailPage from './Pages/ArtistDetailPage';
+import ArtistSearch from "./Pages/ArtistSearch";
+import ArtistDetailPage from "./Pages/ArtistDetailPage";
 
-function App() {
-    const [page, setPage] = useState("submit");
+
+function AppContent() {
+    const { isAuthenticated, setIsAuthenticated } = useContext(AuthContext);
+
+    const [page, setPage] = useState("reviews");
     const [selectedArtistId, setSelectedArtistId] = useState(null);
 
     const handleArtistSelect = (artistId) => {
@@ -21,62 +27,96 @@ function App() {
         setPage("search");
     };
 
+    const logout = () => {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        setIsAuthenticated(false);
+        setPage("login");
+    };
+
     return (
-        <AuthProvider>
-            <div className="container mt-4">
-                <nav className="mb-4 d-flex gap-2">
-                    <button
-                        className={`btn ${page === "submit" ? "btn-primary" : "btn-secondary"}`}
-                        onClick={() => setPage("submit")}
-                    >
-                        Submit Review
-                    </button>
+        <div className="container mt-4">
+            <nav className="mb-4 d-flex gap-2 flex-wrap">
 
-                    <button
-                        className={`btn ${page === "reviews" ? "btn-primary" : "btn-secondary"}`}
-                        onClick={() => setPage("reviews")}
-                    >
-                        All Reviews
-                    </button>
+                {/*<button
+                    className={`btn ${page === "submit" ? "btn-primary" : "btn-secondary"}`}
+                    onClick={() => setPage("submit")}
+                >
+                    Submit Review
+                </button>*/}
 
-                    <button
-                        className={`btn ${page === "search" || page === "artistDetail" ? "btn-primary" : "btn-secondary"}`}
-                        onClick={() => setPage("search")}
-                    >
-                        Search Artists
-                    </button>
+                <button
+                    className={`btn ${page === "reviews" ? "btn-primary" : "btn-secondary"}`}
+                    onClick={() => setPage("reviews")}
+                >
+                    All Reviews
+                </button>
 
-                    <button
-                        className={`btn ${page === "login" ? "btn-primary" : "btn-secondary"}`}
-                        onClick={() => setPage("login")}
-                    >
-                        Login
-                    </button>
+                <button
+                    className={`btn ${page === "search" || page === "artistDetail" ? "btn-primary" : "btn-secondary"}`}
+                    onClick={() => setPage("search")}
+                >
+                    Search Artists
+                </button>
 
-                    <button
-                        className={`btn ${page === "register" ? "btn-primary" : "btn-secondary"}`}
-                        onClick={() => setPage("register")}
-                    >
-                        Register
-                    </button>
-                </nav>
+                {/* 🔐 AUTH NAV */}
+                {!isAuthenticated ? (
+                    <>
+                        <button
+                            className={`btn ${page === "login" ? "btn-primary" : "btn-secondary"}`}
+                            onClick={() => setPage("login")}
+                        >
+                            Login
+                        </button>
 
+                        <button
+                            className={`btn ${page === "register" ? "btn-primary" : "btn-secondary"}`}
+                            onClick={() => setPage("register")}
+                        >
+                            Register
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <button
+                            className={`btn ${page === "profile" ? "btn-primary" : "btn-secondary"}`}
+                            onClick={() => setPage("profile")}
+                        >
+                            Profile
+                        </button>
 
-                {/* Render pages */}
-                {page === "submit" && <SubmitReview />}
-                {page === "reviews" && <ReviewsList />}
-                {page === "search" && <ArtistSearch onArtistSelect={handleArtistSelect} />}
-                {page === "artistDetail" && selectedArtistId && (
-                    <ArtistDetailPage
-                        artistId={selectedArtistId}
-                        onBack={handleBackToSearch}
-                    />
+                        <button
+                            className="btn btn-outline-danger"
+                            onClick={logout}
+                        >
+                            Logout
+                        </button>
+                    </>
                 )}
-                {page === "login" && <Login setPage={setPage} />}
-                {page === "register" && <Register setPage={setPage} />}
-            </div>
-        </AuthProvider>
+            </nav>
+
+            {/* Render pages */}
+            {/*{page === "submit" && <SubmitReview />}*/}
+            {page === "reviews" && <ReviewsList />}
+            {page === "search" && <ArtistSearch onArtistSelect={handleArtistSelect} />}
+            {page === "artistDetail" && selectedArtistId && (
+                <ArtistDetailPage
+                    artistId={selectedArtistId}
+                    onBack={handleBackToSearch}
+                />
+            )}
+            {page === "login" && <Login setPage={setPage} />}
+            {page === "register" && <Register setPage={setPage} />}
+            {page === "profile" && <Profile setPage={setPage} />}
+        </div>
     );
 }
 
-export default App;
+
+export default function App() {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
+    );
+}
