@@ -17,7 +17,7 @@ export default function Login({ setPage }) {
             localStorage.setItem("refresh", data.refresh);
 
             setIsAuthenticated(true);
-            setPage("submit");
+            setPage("reviews");
         } else {
             setError("Invalid username or password");
         }
