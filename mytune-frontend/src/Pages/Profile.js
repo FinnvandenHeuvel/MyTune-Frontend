@@ -3,7 +3,7 @@ import { AuthContext } from "../AuthContext";
 import { authFetch } from "../Services/authFetch";
 
 export default function Profile({ setPage }) {
-    const { isAuthenticated, setIsAuthenticated } = useContext(AuthContext);
+    const { isAuthenticated } = useContext(AuthContext);
 
     const [me, setMe] = useState(null);
     const [myReviews, setMyReviews] = useState([]);

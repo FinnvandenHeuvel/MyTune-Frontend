@@ -5,7 +5,6 @@ import Login from "./Pages/Login";
 import Register from "./Pages/Register";
 import Profile from "./Pages/Profile";
 
-import SubmitReview from "./SubmitReview";
 import ReviewsList from "./reviewsList";
 import ArtistSearch from "./Pages/ArtistSearch";
 import ArtistDetailPage from "./Pages/ArtistDetailPage";
@@ -37,13 +36,6 @@ function AppContent() {
     return (
         <div className="container mt-4">
             <nav className="mb-4 d-flex gap-2 flex-wrap">
-
-                {/*<button
-                    className={`btn ${page === "submit" ? "btn-primary" : "btn-secondary"}`}
-                    onClick={() => setPage("submit")}
-                >
-                    Submit Review
-                </button>*/}
 
                 <button
                     className={`btn ${page === "reviews" ? "btn-primary" : "btn-secondary"}`}
@@ -96,7 +88,6 @@ function AppContent() {
             </nav>
 
             {/* Render pages */}
-            {/*{page === "submit" && <SubmitReview />}*/}
             {page === "reviews" && <ReviewsList />}
             {page === "search" && <ArtistSearch onArtistSelect={handleArtistSelect} />}
             {page === "artistDetail" && selectedArtistId && (
