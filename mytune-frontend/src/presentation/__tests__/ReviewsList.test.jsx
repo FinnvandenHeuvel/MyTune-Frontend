@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import ReviewsList from '../components/reviews/reviewsList';
+import ReviewsList from '../components/reviews/ReviewsList';
 
 jest.mock('../../application/usecases/reviews/listReviews', () => ({
   listReviews: jest.fn(),
