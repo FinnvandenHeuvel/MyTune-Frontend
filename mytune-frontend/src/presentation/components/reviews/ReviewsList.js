@@ -1,132 +1,111 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { authFetch } from "./Services/authFetch";
+import React, { useEffect, useMemo, useState } from 'react';
+import { container } from '../../../app/di/container';
+import { listReviews } from '../../../application/usecases/reviews/listReviews';
+import { deleteReview } from '../../../application/usecases/reviews/deleteReview';
+import { getMe } from '../../../application/usecases/profile/getMe';
 
 function ReviewsList() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // ✅ Filters UI state
-  const [search, setSearch] = useState("");
-  const [artistFilter, setArtistFilter] = useState("all");
-  const [albumFilter, setAlbumFilter] = useState("all");
-  const [minRating, setMinRating] = useState("all"); // keep as string for <select>
-  const [sortBy, setSortBy] = useState("newest");
+  const [search, setSearch] = useState('');
+  const [artistFilter, setArtistFilter] = useState('all');
+  const [albumFilter, setAlbumFilter] = useState('all');
+  const [minRating, setMinRating] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
 
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000/api";
+  const listReviewsUC = useMemo(
+    () => listReviews({ reviewsGateway: container.reviewsGateway }),
+    [],
+  );
+  const deleteReviewUC = useMemo(
+    () => deleteReview({ reviewsGateway: container.reviewsGateway }),
+    [],
+  );
+  const getMeUC = useMemo(() => getMe({ profileGateway: container.profileGateway }), []);
 
-  // Fetch reviews + user role
   useEffect(() => {
-    const fetchData = async () => {
+    (async () => {
       try {
-        // Fetch reviews (public)
-        const reviewsRes = await fetch(`${API_URL}/reviews/`);
-        if (!reviewsRes.ok) throw new Error("Failed to fetch reviews");
-        const reviewsData = await reviewsRes.json();
+        const reviewsData = await listReviewsUC();
         setReviews(reviewsData);
 
-        // Fetch user info (auth required)
-        const meRes = await authFetch("/me/");
-        if (meRes.ok) {
-          const meData = await meRes.json();
-          setIsAdmin(meData.is_admin === true);
+        // Admin check (optional; ignore if not logged in)
+        try {
+          const me = await getMeUC();
+          setIsAdmin(me.is_admin === true);
+        } catch {
+          setIsAdmin(false);
         }
-
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
+      } catch (e) {
+        setError(e.message || 'Failed to fetch reviews');
+      } finally {
         setLoading(false);
       }
-    };
-
-    fetchData();
-  }, [API_URL]);
+    })();
+  }, [listReviewsUC, getMeUC]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this review?")) return;
-
-    const res = await authFetch(`/reviews/${id}/`, {
-      method: "DELETE",
-    });
-
-    if (res.ok) {
+    if (!window.confirm('Are you sure you want to delete this review?')) return;
+    try {
+      await deleteReviewUC(id);
       setReviews((prev) => prev.filter((r) => r.id !== id));
-    } else {
-      const err = await res.json().catch(() => ({}));
-      alert(err.detail || "Failed to delete review");
+    } catch (e) {
+      alert(e.message || 'Failed to delete review');
     }
   };
 
-  // ✅ Build dropdown options from data
   const artists = useMemo(() => {
     const set = new Set(reviews.map((r) => r.artist).filter(Boolean));
-    return ["all", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+    return ['all', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [reviews]);
 
   const albums = useMemo(() => {
     const set = new Set(reviews.map((r) => r.album).filter(Boolean));
-    return ["all", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+    return ['all', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [reviews]);
 
-  // ✅ Filter + sort derived list (no mutation)
   const filteredReviews = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const min = minRating === "all" ? null : Number(minRating);
+    const min = minRating === 'all' ? null : Number(minRating);
 
     let list = reviews.filter((r) => {
-      // Artist filter
-      if (artistFilter !== "all" && r.artist !== artistFilter) return false;
-
-      // Album filter
-      // note: treat empty/undefined album as "no album"
-      if (albumFilter !== "all") {
-        const albumValue = r.album || "";
+      if (artistFilter !== 'all' && r.artist !== artistFilter) return false;
+      if (albumFilter !== 'all') {
+        const albumValue = r.album || '';
         if (albumValue !== albumFilter) return false;
       }
-
-      // Min rating
       if (min !== null && Number(r.rating) < min) return false;
 
-      // Search
       if (!q) return true;
-      const haystack = [
-        r.title,
-        r.content,
-        r.user,
-        r.artist,
-        r.album,
-      ]
+      const haystack = [r.title, r.content, r.user, r.artist, r.album]
         .filter(Boolean)
-        .join(" ")
+        .join(' ')
         .toLowerCase();
-
       return haystack.includes(q);
     });
 
-    // Sort
     list.sort((a, b) => {
-      if (sortBy === "rating_desc") return (Number(b.rating) || 0) - (Number(a.rating) || 0);
-      if (sortBy === "rating_asc") return (Number(a.rating) || 0) - (Number(b.rating) || 0);
+      if (sortBy === 'rating_desc') return (Number(b.rating) || 0) - (Number(a.rating) || 0);
+      if (sortBy === 'rating_asc') return (Number(a.rating) || 0) - (Number(b.rating) || 0);
 
       const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
       const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
-
-      if (sortBy === "oldest") return aDate - bDate;
-      // default newest
+      if (sortBy === 'oldest') return aDate - bDate;
       return bDate - aDate;
     });
 
     return list;
   }, [reviews, search, artistFilter, albumFilter, minRating, sortBy]);
 
-  // ✅ Reset helper
   const clearFilters = () => {
-    setSearch("");
-    setArtistFilter("all");
-    setAlbumFilter("all");
-    setMinRating("all");
-    setSortBy("newest");
+    setSearch('');
+    setArtistFilter('all');
+    setAlbumFilter('all');
+    setMinRating('all');
+    setSortBy('newest');
   };
 
   if (loading) return <p>Loading reviews...</p>;
@@ -136,7 +115,7 @@ function ReviewsList() {
     <div className="container mt-5">
       <h2 className="mb-3">All Reviews</h2>
 
-      {/* ✅ Filters UI */}
+      {/* Filters UI */}
       <div className="card mb-4">
         <div className="card-body">
           <div className="row g-3 align-items-end">
@@ -146,7 +125,6 @@ function ReviewsList() {
                 className="form-control"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search title, content, user, artist, album..."
               />
             </div>
 
@@ -159,7 +137,7 @@ function ReviewsList() {
               >
                 {artists.map((a) => (
                   <option key={a} value={a}>
-                    {a === "all" ? "All artists" : a}
+                    {a === 'all' ? 'All artists' : a}
                   </option>
                 ))}
               </select>
@@ -172,10 +150,9 @@ function ReviewsList() {
                 value={albumFilter}
                 onChange={(e) => setAlbumFilter(e.target.value)}
               >
-                {/* If you want an explicit "No album" option, tell me and I’ll add it */}
                 {albums.map((a) => (
                   <option key={a} value={a}>
-                    {a === "all" ? "All albums" : a}
+                    {a === 'all' ? 'All albums' : a}
                   </option>
                 ))}
               </select>
@@ -213,7 +190,7 @@ function ReviewsList() {
 
             <div className="col-12 d-flex justify-content-between align-items-center mt-3">
               <small className="text-muted">
-                Showing <strong>{filteredReviews.length}</strong> of{" "}
+                Showing <strong>{filteredReviews.length}</strong> of{' '}
                 <strong>{reviews.length}</strong>
               </small>
               <button className="btn btn-outline-secondary btn-sm" onClick={clearFilters}>
@@ -224,7 +201,6 @@ function ReviewsList() {
         </div>
       </div>
 
-      {/* ✅ Results */}
       {filteredReviews.length === 0 ? (
         <p>No reviews match your filters.</p>
       ) : (
@@ -238,13 +214,12 @@ function ReviewsList() {
                     {review.artist}
                     {review.album && (
                       <>
-                        {" "}
-                        <span className="fw-normal">—</span>{" "}
+                        {' '}
+                        <span className="fw-normal">—</span>{' '}
                         <span className="fw-semibold">{review.album}</span>
                       </>
                     )}
                   </h6>
-
                   <p>{review.content}</p>
                   <small className="text-muted">
                     By <strong>{review.user}</strong> • Rating {review.rating}/5
@@ -253,10 +228,7 @@ function ReviewsList() {
                 </div>
 
                 {isAdmin && (
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(review.id)}
-                  >
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(review.id)}>
                     Delete
                   </button>
                 )}
