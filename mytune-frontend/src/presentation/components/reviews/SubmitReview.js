@@ -49,6 +49,11 @@ function SubmitReview() {
     }
   };
 
+  const titleId = 'review-title';
+  const artistId = 'review-artist';
+  const contentId = 'review-content';
+  const ratingId = 'review-rating';
+
   return (
     <div className="container mt-5">
       <h2>Submit a Review</h2>
@@ -56,8 +61,11 @@ function SubmitReview() {
 
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
-          <label className="form-label">Title</label>
+          <label className="form-label" htmlFor={titleId}>
+            Title
+          </label>
           <input
+            id={titleId}
             name="title"
             className="form-control"
             value={formData.title}
@@ -67,8 +75,11 @@ function SubmitReview() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Artist</label>
+          <label className="form-label" htmlFor={artistId}>
+            Artist
+          </label>
           <input
+            id={artistId}
             name="artist"
             className="form-control"
             value={formData.artist}
@@ -78,8 +89,11 @@ function SubmitReview() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Content</label>
+          <label className="form-label" htmlFor={contentId}>
+            Content
+          </label>
           <textarea
+            id={contentId}
             name="content"
             className="form-control"
             value={formData.content}
@@ -89,8 +103,11 @@ function SubmitReview() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Rating</label>
+          <label className="form-label" htmlFor={ratingId}>
+            Rating
+          </label>
           <select
+            id={ratingId}
             name="rating"
             className="form-select"
             value={formData.rating}

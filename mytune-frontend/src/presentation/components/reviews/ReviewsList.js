@@ -111,6 +111,13 @@ function ReviewsList() {
   if (loading) return <p>Loading reviews...</p>;
   if (error) return <p>Error: {error}</p>;
 
+  // IDs for accessibility (label -> control)
+  const searchId = 'reviews-search';
+  const artistId = 'reviews-artist-filter';
+  const albumId = 'reviews-album-filter';
+  const ratingId = 'reviews-min-rating';
+  const sortId = 'reviews-sort-by';
+
   return (
     <div className="container mt-5">
       <h2 className="mb-3">All Reviews</h2>
@@ -120,8 +127,11 @@ function ReviewsList() {
         <div className="card-body">
           <div className="row g-3 align-items-end">
             <div className="col-12 col-md-4">
-              <label className="form-label">Search</label>
+              <label className="form-label" htmlFor={searchId}>
+                Search
+              </label>
               <input
+                id={searchId}
                 className="form-control"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -129,8 +139,11 @@ function ReviewsList() {
             </div>
 
             <div className="col-12 col-md-2">
-              <label className="form-label">Artist</label>
+              <label className="form-label" htmlFor={artistId}>
+                Artist
+              </label>
               <select
+                id={artistId}
                 className="form-select"
                 value={artistFilter}
                 onChange={(e) => setArtistFilter(e.target.value)}
@@ -144,8 +157,11 @@ function ReviewsList() {
             </div>
 
             <div className="col-12 col-md-2">
-              <label className="form-label">Album</label>
+              <label className="form-label" htmlFor={albumId}>
+                Album
+              </label>
               <select
+                id={albumId}
                 className="form-select"
                 value={albumFilter}
                 onChange={(e) => setAlbumFilter(e.target.value)}
@@ -159,8 +175,11 @@ function ReviewsList() {
             </div>
 
             <div className="col-12 col-md-2">
-              <label className="form-label">Min rating</label>
+              <label className="form-label" htmlFor={ratingId}>
+                Min rating
+              </label>
               <select
+                id={ratingId}
                 className="form-select"
                 value={minRating}
                 onChange={(e) => setMinRating(e.target.value)}
@@ -175,8 +194,11 @@ function ReviewsList() {
             </div>
 
             <div className="col-12 col-md-2">
-              <label className="form-label">Sort</label>
+              <label className="form-label" htmlFor={sortId}>
+                Sort
+              </label>
               <select
+                id={sortId}
                 className="form-select"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
