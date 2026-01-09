@@ -79,14 +79,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Optional (recommended later): produce coverage for Sonar
-      # - name: Run tests with coverage
-      #   run: npm test -- --watchAll=false --coverage
-
       - name: SonarCloud scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
         with:
           projectBaseDir: mytune-frontend
 
