@@ -9,6 +9,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
+    "prop-types": "^15.8.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-scripts": "5.0.1",
@@ -19,7 +20,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "eslint \"src/**/*.{js,jsx}\"",
+    "lint": "react-scripts build",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -27,11 +28,7 @@
     "extends": [
       "react-app",
       "react-app/jest"
-    ],
-    "rules": {
-      "react/prop-types": "off",
-      "react/react-in-jsx-scope": "off"
-    }
+    ]
   },
   "browserslist": {
     "production": [
@@ -53,5 +50,4 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "prettier": "^3.7.4"
   }
-
 }

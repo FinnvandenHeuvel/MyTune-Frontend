@@ -1,4 +1,5 @@
-import { useMemo, useState, useContext } from 'react';
+import React, { useMemo, useState, useContext } from 'react';
+import PropTypes from 'prop-types';
 import { AuthContext } from '../../app/providers/AuthProvider';
 import { container } from '../../app/di/container';
 import { login } from '../../application/usecases/auth/login';
@@ -48,3 +49,7 @@ export default function Login({ setPage }) {
     </form>
   );
 }
+
+Login.propTypes = {
+  setPage: PropTypes.func.isRequired,
+};

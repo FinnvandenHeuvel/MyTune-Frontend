@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useContext } from 'react';
+import PropTypes from 'prop-types';
 import { AuthContext } from '../../app/providers/AuthProvider';
 import { container } from '../../app/di/container';
 import { getMe } from '../../application/usecases/profile/getMe';
@@ -59,6 +60,7 @@ export default function Profile({ setPage }) {
         <p>Loading profile…</p>
       </div>
     );
+
   if (error)
     return (
       <div className="container mt-4">
@@ -108,3 +110,7 @@ export default function Profile({ setPage }) {
     </div>
   );
 }
+
+Profile.propTypes = {
+  setPage: PropTypes.func, // optional because you use setPage?.('login')
+};

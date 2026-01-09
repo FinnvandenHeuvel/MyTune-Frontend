@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import { container } from '../../app/di/container';
 import { searchArtists } from '../../application/usecases/spotify/searchArtists';
 
@@ -84,5 +85,9 @@ function ArtistSearch({ onArtistSelect }) {
     </div>
   );
 }
+
+ArtistSearch.propTypes = {
+  onArtistSelect: PropTypes.func.isRequired,
+};
 
 export default ArtistSearch;

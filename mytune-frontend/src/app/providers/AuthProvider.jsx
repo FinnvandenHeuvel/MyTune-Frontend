@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import { tokenStorage } from '../../data/storage/tokenStorage';
 import { logout as logoutUsecase } from '../../application/usecases/auth/logout';
 
@@ -18,7 +19,6 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const onStorage = () => syncAuth();
-
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, [syncAuth]);
@@ -40,3 +40,7 @@ export function AuthProvider({ children }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};

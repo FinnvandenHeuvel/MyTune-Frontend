@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useContext, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { AuthContext } from '../../app/providers/AuthProvider';
 import { container } from '../../app/di/container';
 
@@ -253,5 +254,10 @@ function ArtistDetailPage({ artistId, onBack }) {
     </div>
   );
 }
+
+ArtistDetailPage.propTypes = {
+  artistId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  onBack: PropTypes.func.isRequired,
+};
 
 export default ArtistDetailPage;

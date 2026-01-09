@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import { container } from '../../app/di/container';
 import { register } from '../../application/usecases/auth/register';
 
@@ -60,3 +61,7 @@ export default function Register({ setPage }) {
     </form>
   );
 }
+
+Register.propTypes = {
+  setPage: PropTypes.func.isRequired,
+};
