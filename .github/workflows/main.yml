@@ -53,9 +53,46 @@ jobs:
         with:
           path: ./mytune-frontend/build
 
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    defaults:
+      run:
+        working-directory: ./mytune-frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "./mytune-frontend/package-lock.json"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Optional (recommended later): produce coverage for Sonar
+      # - name: Run tests with coverage
+      #   run: npm test -- --watchAll=false --coverage
+
+      - name: SonarCloud scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: mytune-frontend
+
   deploy:
     if: github.ref == 'refs/heads/master'
-    needs: build-and-test
+    needs: [build-and-test, sonarcloud]
     runs-on: ubuntu-latest
     permissions:
       pages: write
