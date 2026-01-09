@@ -2,7 +2,6 @@ import React, { useMemo, useState, useEffect, useContext, useCallback } from 're
 import PropTypes from 'prop-types';
 import { AuthContext } from '../../app/providers/AuthProvider';
 import { container } from '../../app/di/container';
-
 import { getArtist } from '../../application/usecases/spotify/getArtist';
 import { getArtistAlbums } from '../../application/usecases/spotify/getArtistAlbums';
 import { listReviews } from '../../application/usecases/reviews/listReviews';
@@ -13,7 +12,7 @@ function ArtistDetailPage({ artistId, onBack }) {
 
   const [artist, setArtist] = useState(null);
   const [albums, setAlbums] = useState([]);
-  const [reviews, setReviewsState] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -26,17 +25,14 @@ function ArtistDetailPage({ artistId, onBack }) {
   });
 
   const getArtistUC = useMemo(() => getArtist({ spotifyGateway: container.spotifyGateway }), []);
-
   const getAlbumsUC = useMemo(
     () => getArtistAlbums({ spotifyGateway: container.spotifyGateway }),
     [],
   );
-
   const listReviewsUC = useMemo(
     () => listReviews({ reviewsGateway: container.reviewsGateway }),
     [],
   );
-
   const createReviewUC = useMemo(
     () => createReview({ reviewsGateway: container.reviewsGateway }),
     [],
@@ -44,7 +40,7 @@ function ArtistDetailPage({ artistId, onBack }) {
 
   const refreshReviews = useCallback(async () => {
     const data = await listReviewsUC({ artist_id: artistId });
-    setReviewsState(data);
+    setReviews(data);
   }, [artistId, listReviewsUC]);
 
   useEffect(() => {
@@ -60,8 +56,8 @@ function ArtistDetailPage({ artistId, onBack }) {
         setAlbums(albumsData);
 
         await refreshReviews();
-      } catch (e) {
-        setError(e.message || 'Failed to load artist');
+      } catch (error_) {
+        setError(error_?.message || 'Failed to load artist');
       } finally {
         setLoading(false);
       }
@@ -103,8 +99,8 @@ function ArtistDetailPage({ artistId, onBack }) {
       setSelectedAlbum(null);
       await refreshReviews();
       setTimeout(() => setMessage(''), 2000);
-    } catch (e2) {
-      setMessage(`Error: ${e2.message || 'Failed to submit review'}`);
+    } catch (error_) {
+      setMessage(`Error: ${error_?.message || 'Failed to submit review'}`);
     }
   };
 
@@ -178,9 +174,7 @@ function ArtistDetailPage({ artistId, onBack }) {
           </div>
         )}
 
-        {!isAuthenticated ? (
-          <div className="alert alert-warning">You must be logged in to submit a review.</div>
-        ) : (
+        {isAuthenticated ? (
           <form onSubmit={handleSubmit} className="card p-4">
             {selectedAlbum && (
               <div className="mb-3">
@@ -225,6 +219,8 @@ function ArtistDetailPage({ artistId, onBack }) {
               Submit Review
             </button>
           </form>
+        ) : (
+          <div className="alert alert-warning">You must be logged in to submit a review.</div>
         )}
       </div>
 
