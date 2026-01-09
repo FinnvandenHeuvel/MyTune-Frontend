@@ -48,7 +48,7 @@ function ReviewsList() {
   }, [listReviewsUC, getMeUC]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this review?')) return;
+    if (!globalThis.confirm('Are you sure you want to delete this review?')) return;
     try {
       await deleteReviewUC(id);
       setReviews((prev) => prev.filter((r) => r.id !== id));

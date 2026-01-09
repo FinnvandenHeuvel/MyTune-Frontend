@@ -19,8 +19,9 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const onStorage = () => syncAuth();
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+
+    globalThis.addEventListener('storage', onStorage);
+    return () => globalThis.removeEventListener('storage', onStorage);
   }, [syncAuth]);
 
   const logout = useCallback(() => {

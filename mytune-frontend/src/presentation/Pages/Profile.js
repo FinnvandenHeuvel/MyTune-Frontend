@@ -9,7 +9,7 @@ export default function Profile({ setPage }) {
   const { isAuthenticated } = useContext(AuthContext);
 
   const [meState, setMeState] = useState(null);
-  const [myReviews, setMyReviewsState] = useState([]);
+  const [myReviews, setMyReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -34,7 +34,7 @@ export default function Profile({ setPage }) {
         setMeState(meData);
 
         const reviewsData = await getMyReviewsUC();
-        setMyReviewsState(reviewsData);
+        setMyReviews(reviewsData);
       } catch (e) {
         setError(e.message || 'Could not load profile. Please log in again.');
       } finally {
@@ -47,26 +47,28 @@ export default function Profile({ setPage }) {
     return (
       <div className="container mt-4">
         <div className="alert alert-warning">You must be logged in to view your profile.</div>
-        <button className="btn btn-primary" onClick={() => setPage?.('login')}>
+        <button type="button" className="btn btn-primary" onClick={() => setPage?.('login')}>
           Go to Login
         </button>
       </div>
     );
   }
 
-  if (loading)
+  if (loading) {
     return (
       <div className="container mt-4">
         <p>Loading profile…</p>
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger">{error}</div>
       </div>
     );
+  }
 
   return (
     <div className="container mt-4">
@@ -112,5 +114,5 @@ export default function Profile({ setPage }) {
 }
 
 Profile.propTypes = {
-  setPage: PropTypes.func, // optional because you use setPage?.('login')
+  setPage: PropTypes.func,
 };
