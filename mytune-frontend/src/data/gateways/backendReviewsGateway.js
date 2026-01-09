@@ -2,7 +2,8 @@ export const createBackendReviewsGateway = ({ http, apiBaseUrl }) => ({
   // Public list endpoint (no auth). Using raw fetch keeps it truly public.
   list: async (params = {}) => {
     const qs = new URLSearchParams(params).toString();
-    const url = `${apiBaseUrl}/reviews/${qs ? `?${qs}` : ''}`;
+    const baseUrl = `${apiBaseUrl}/reviews/`;
+    const url = qs ? `${baseUrl}?${qs}` : baseUrl;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch reviews');

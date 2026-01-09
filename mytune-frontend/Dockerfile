@@ -1,19 +1,26 @@
 FROM node:18
 
-# Set working directory inside container
 WORKDIR /app
 
-# Copy package files first (better layer caching)
+# Create a non-root user and group
+RUN groupadd -r app && useradd -r -g app app
+
+# Copy only package files first (cache-friendly)
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
-# Copy the rest of the project
+# Copy the rest of the project (still needs .dockerignore)
 COPY . .
 
-# Expose React dev server port
+# Fix permissions for the non-root user
+RUN chown -R app:app /app
+
+# Switch to non-root
+USER app
+
 EXPOSE 3000
 
-# Start the React app
+# CRA dev server should listen on all interfaces
 CMD ["npm", "start", "--", "--host", "0.0.0.0"]
