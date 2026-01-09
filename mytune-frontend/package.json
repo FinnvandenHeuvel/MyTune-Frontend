@@ -25,7 +25,10 @@
     "format:check": "prettier --check ."
   },
   "eslintConfig": {
-    "extends": ["react-app", "react-app/jest"],
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ],
     "globals": {
       "globalThis": "readonly"
     }
