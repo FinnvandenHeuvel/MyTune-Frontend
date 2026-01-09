@@ -8,13 +8,19 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const syncAuth = useCallback(() => {
-    setIsAuthenticated(!!tokenStorage.getAccess());
+    const next = !!tokenStorage.getAccess();
+    setIsAuthenticated((prev) => (prev === next ? prev : next));
   }, []);
 
   useEffect(() => {
     syncAuth();
-    window.addEventListener('storage', syncAuth);
-    return () => window.removeEventListener('storage', syncAuth);
+  }, [syncAuth]);
+
+  useEffect(() => {
+    const onStorage = () => syncAuth();
+
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, [syncAuth]);
 
   const logout = useCallback(() => {
@@ -25,9 +31,9 @@ export function AuthProvider({ children }) {
   const value = useMemo(
     () => ({
       isAuthenticated,
-      setIsAuthenticated, // keep for your existing Login flow
+      setIsAuthenticated,
       logout,
-      syncAuth, // handy after login if you want it
+      syncAuth,
     }),
     [isAuthenticated, logout, syncAuth],
   );
