@@ -49,12 +49,16 @@ jobs:
           CI: "true"
         run: npm test -- --coverage --watchAll=false
 
-      - name: Verify coverage output exists
+      - name: Debug lcov mapping (must find real files)
         run: |
-          echo "== coverage directory =="
-          ls -la coverage || true
-          echo "== lcov.info preview =="
-          test -f coverage/lcov.info && head -n 20 coverage/lcov.info || (echo "coverage/lcov.info NOT FOUND" && exit 1)
+          echo "PWD: $(pwd)"
+          echo "List coverage dir:"
+          ls -la coverage
+          echo "First 20 SF: entries from lcov:"
+          grep -n "^SF:" coverage/lcov.info | head -n 20
+          first=$(grep -m1 "^SF:" coverage/lcov.info | sed "s/^SF://")
+          echo "First SF path: $first"
+          test -f "$first" && echo "OK: $first exists" || (echo "MISSING: $first (coverage won't be applied)" && exit 1)
 
       - name: SonarCloud scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -64,7 +68,13 @@ jobs:
         with:
           projectBaseDir: mytune-frontend
           args: >
+            -Dsonar.projectBaseDir=mytune-frontend
+            -Dsonar.sources=src
+            -Dsonar.tests=src
+            -Dsonar.test.inclusions=src/**/*.test.js,src/**/*.test.jsx,src/**/*.spec.js,src/**/*.spec.jsx
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.coverage.exclusions=**/*.test.*,**/__tests__/**,**/setupTests.*,src/index.js,src/reportWebVitals.js
+            -Dsonar.verbose=true
 
       - name: Build project
         run: npm run build
@@ -85,6 +95,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
