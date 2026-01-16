@@ -17,10 +17,11 @@ test('search displays artists', async () => {
 
   searchArtists.mockReturnValue(run);
 
+  const user = userEvent.setup();
   render(<ArtistSearch onArtistSelect={jest.fn()} />);
 
-  userEvent.type(screen.getByRole('textbox'), 'radiohead');
-  userEvent.click(screen.getByRole('button', { name: /search/i }));
+  await user.type(screen.getByRole('textbox'), 'radiohead');
+  await user.click(screen.getByRole('button', { name: /search/i }));
 
   expect(searchArtists).toHaveBeenCalledTimes(1);
 
