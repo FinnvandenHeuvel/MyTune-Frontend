@@ -2,63 +2,24 @@ name: React CI/CD
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
   pull_request:
-    branches:
-      - master
+    branches: [ master ]
 
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: ./mytune-frontend
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          cache: "npm"
-          cache-dependency-path: "./mytune-frontend/package-lock.json"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Format check (Prettier)
-        run: npm run format:check
-
-      - name: Lint (ESLint)
-        run: npm run lint
-
-      - name: Run tests
-        run: npm test
-
-      - name: Build project
-        run: npm run build
-
-      - name: Upload build artifact
-        if: github.ref == 'refs/heads/master'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./mytune-frontend/build
-
-  sonarcloud:
-    name: SonarCloud Scan
+  build_test_sonar:
+    name: Build + Test + Coverage + SonarCloud
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
+      pages: write
+      id-token: write
+
     defaults:
       run:
         working-directory: ./mytune-frontend
@@ -79,6 +40,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Format check (Prettier)
+        run: npm run format:check
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Run tests (with coverage)
+        run: npm test -- --coverage --watchAll=false
+
       - name: SonarCloud scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
@@ -86,10 +56,22 @@ jobs:
           SONAR_HOST_URL: https://sonarcloud.io
         with:
           projectBaseDir: mytune-frontend
+          args: >
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload build artifact
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./mytune-frontend/build
 
   deploy:
     if: github.ref == 'refs/heads/master'
-    needs: [build-and-test, sonarcloud]
+    needs: [build_test_sonar]
     runs-on: ubuntu-latest
     permissions:
       pages: write
