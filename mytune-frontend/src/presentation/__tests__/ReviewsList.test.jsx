@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import ReviewsList from '../components/reviews/ReviewsList';
 
+import { listReviews } from '../../application/usecases/reviews/listReviews';
+
 jest.mock('../../application/usecases/reviews/listReviews', () => ({
   listReviews: jest.fn(),
 }));
-
-import { listReviews } from '../../application/usecases/reviews/listReviews';
 
 test('renders reviews from backend', async () => {
   const run = jest.fn().mockResolvedValue([

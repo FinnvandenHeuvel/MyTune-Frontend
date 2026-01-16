@@ -2,11 +2,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ArtistSearch from '../Pages/ArtistSearch';
 
+import { searchArtists } from '../../application/usecases/spotify/searchArtists';
+
 jest.mock('../../application/usecases/spotify/searchArtists', () => ({
   searchArtists: jest.fn(),
 }));
-
-import { searchArtists } from '../../application/usecases/spotify/searchArtists';
 
 test('search displays artists', async () => {
   const run = jest
@@ -19,8 +19,8 @@ test('search displays artists', async () => {
 
   render(<ArtistSearch onArtistSelect={jest.fn()} />);
 
-  await userEvent.type(screen.getByRole('textbox'), 'radiohead');
-  await userEvent.click(screen.getByRole('button', { name: /search/i }));
+  userEvent.type(screen.getByRole('textbox'), 'radiohead');
+  userEvent.click(screen.getByRole('button', { name: /search/i }));
 
   // first call: DI
   expect(searchArtists).toHaveBeenCalledTimes(1);
