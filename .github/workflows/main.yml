@@ -2,18 +2,21 @@ name: React CI/CD
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
 
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  build_test_sonar:
-    name: Build + Test + Coverage + SonarCloud
+  test_and_sonar:
+    name: Test + Coverage + SonarCloud
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       pull-requests: read
@@ -45,19 +48,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests (with coverage)
-        env:
-          CI: "true"
         run: npm test -- --coverage --watchAll=false
-
-      - name: Debug coverage files
-        run: |
-          echo "PWD: $(pwd)"
-          ls -la coverage
-          echo "First 20 SF entries:"
-          grep -n "^SF:" coverage/lcov.info | head -n 20
-          echo "Confirm first SF exists:"
-          first=$(grep -m1 "^SF:" coverage/lcov.info | sed "s/^SF://")
-          test -f "$first" && echo "OK: $first exists" || exit 1
 
       - name: SonarCloud scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -67,9 +58,7 @@ jobs:
         with:
           projectBaseDir: mytune-frontend
           args: >
-            -Dsonar.sources=src
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.verbose=true
 
       - name: Build project
         run: npm run build
@@ -82,7 +71,7 @@ jobs:
 
   deploy:
     if: github.ref == 'refs/heads/master'
-    needs: [build_test_sonar]
+    needs: [test_and_sonar]
     runs-on: ubuntu-latest
     permissions:
       pages: write
