@@ -1,13 +1,13 @@
 import { login } from './login';
 
+import { tokenStorage } from '../../../data/storage/tokenStorage';
+
 jest.mock('../../../data/storage/tokenStorage', () => ({
   tokenStorage: {
     setAccess: jest.fn(),
     setRefresh: jest.fn(),
   },
 }));
-
-import { tokenStorage } from '../../../data/storage/tokenStorage';
 
 test('login stores tokens when gateway returns access', async () => {
   const fakeAuthGateway = {
