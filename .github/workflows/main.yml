@@ -17,8 +17,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-      pages: write
-      id-token: write
 
     defaults:
       run:
@@ -47,7 +45,16 @@ jobs:
         run: npm run lint
 
       - name: Run tests (with coverage)
+        env:
+          CI: "true"
         run: npm test -- --coverage --watchAll=false
+
+      - name: Verify coverage output exists
+        run: |
+          echo "== coverage directory =="
+          ls -la coverage || true
+          echo "== lcov.info preview =="
+          test -f coverage/lcov.info && head -n 20 coverage/lcov.info || (echo "coverage/lcov.info NOT FOUND" && exit 1)
 
       - name: SonarCloud scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -58,7 +65,6 @@ jobs:
           projectBaseDir: mytune-frontend
           args: >
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
 
       - name: Build project
         run: npm run build
@@ -79,7 +85,6 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
